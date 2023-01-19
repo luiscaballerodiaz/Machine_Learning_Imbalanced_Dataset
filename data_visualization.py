@@ -1,4 +1,8 @@
+from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_auc_score
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+from sklearn.metrics import confusion_matrix
 import math
 import numpy as np
 
@@ -111,4 +115,40 @@ class DataPlot:
         plt.grid()
         fig.tight_layout()
         plt.savefig('Count class cases.png', bbox_inches='tight')
+        plt.clf()
+
+    def roc_curve_plot(self, algorithm, model, X_train, y_train, X_test, y_test, weight_tpr):
+        """Plot ROC curve"""
+        cmap = cm.get_cmap('Set1')
+        colors = cmap.colors
+        fig, axes = plt.subplots(1, 1, figsize=(self.fig_width, self.fig_height))
+        for i in range(len(model)):
+            model[i].fit(X_train, y_train)
+            print("Test score {}: {:.2f}".format(algorithm[i], model[i].score(X_test, y_test)))
+            y_pred_prob = model[i].predict_proba(X_test)[:, 1]
+            print('AUC {}: {:.4f}'.format(algorithm[i], roc_auc_score(y_test, y_pred_prob)))
+            fpr, tpr, th = roc_curve(y_test, y_pred_prob)
+            youden = weight_tpr * tpr - fpr
+            index_opt = np.argmax(youden)
+            index05 = np.argmin(np.abs(th - 0.5))
+            plt.plot(fpr, tpr, color=colors[i], linewidth=2, label='ROC curve ' + algorithm[i])
+            plt.scatter(fpr[index05], tpr[index05], s=200, marker='o', label='Default threshold ' + algorithm[i],
+                        edgecolor='k', lw=2, color=colors[i])
+            plt.scatter(fpr[index_opt], tpr[index_opt], s=200, marker='^', label='Optimal threshold ' + algorithm[i],
+                        edgecolor='k', lw=2, color=colors[i])
+            conf_matrix_default = confusion_matrix(y_test, model[i].predict(X_test))
+            conf_matrix_opt = confusion_matrix(y_test, model[i].predict_proba(X_test)[:, 1] > th[index_opt])
+            print("Confusion matrix default threshold:\n{}".format(conf_matrix_default))
+            print('Default threshold TPR: {:.4f}'.format(conf_matrix_default[1, 1] / np.sum(conf_matrix_default[1, :])))
+            print('Default threshold FPR: {:.4f}'.format(conf_matrix_default[0, 1] / np.sum(conf_matrix_default[0, :])))
+            print("Confusion matrix optimal threshold:\n{}".format(conf_matrix_opt))
+            print('Optimal threshold TPR: {:.4f}'.format(conf_matrix_opt[1, 1] / np.sum(conf_matrix_opt[1, :])))
+            print('Optimal threshold FPR: {:.4f}\n'.format(conf_matrix_opt[0, 1] / np.sum(conf_matrix_opt[0, :])))
+        plt.title('Receiver Operating Characteristics (ROC) curve with TPR weight ' + str(weight_tpr), fontsize=24)
+        plt.xlabel("FPR (false positives divided by negative samples)", fontsize=14)
+        plt.ylabel("TPR (true positives divided by positive samples)", fontsize=14)
+        plt.grid()
+        plt.legend()
+        fig.tight_layout()
+        plt.savefig('ROC curve TPR weight ' + str(weight_tpr) + '.png', bbox_inches='tight')
         plt.clf()
