@@ -179,7 +179,8 @@ class DataTools:
         plt.savefig(plot_name + ' ROC curve TPR weight ' + str(weight_tpr) + '.png', bbox_inches='tight')
         plt.clf()
 
-    def param_sweep_plot(self, algorithm, params, test_score):
+    def param_sweep_plot(self, alg, params, test_score):
+        algorithm = alg.copy()
         for i in range(len(algorithm)):
             test = []
             feat_name = []
@@ -346,12 +347,7 @@ class DataTools:
         scaler = []
         for i in range(len(algorithm)):
             model.append(self.create_model(algorithm[i]))
-            if scale[i].lower() == 'norm':
-                scaler.append(MinMaxScaler())
-            elif scale[i].lower() == 'std':
-                scaler.append(StandardScaler())
-            else:
-                scaler.append(None)
+            scaler.append(self.create_scaler(scale[i]))
             param_grid[i]['classifier'] = [model[i]]
             param_grid[i]['preprocessing'] = [scaler[i]]
         pipe = Pipeline([('preprocessing', scaler), ('classifier', model)])
@@ -360,8 +356,18 @@ class DataTools:
         print("Best parameters: {}".format(grid_search.best_params_))
         print("Best cross-validation score: {:.4f}".format(grid_search.best_score_))
         print("Test set score: {:.4f}".format(grid_search.score(X_test, y_test)))
-        print('Grid search time: {:.1f}'.format(time.time() - time0))
+        print('Grid search time: {:.1f}\n'.format(time.time() - time0))
         return grid_search
+
+    @staticmethod
+    def create_scaler(scale):
+        if scale.lower() == 'norm':
+            scaler = MinMaxScaler()
+        elif scale.lower() == 'std':
+            scaler = StandardScaler()
+        else:
+            scaler = None
+        return scaler
 
     @staticmethod
     def create_model(algorithm):
@@ -384,6 +390,6 @@ class DataTools:
         elif algorithm.lower() == 'mlp':
             model = MLPClassifier(random_state=0)
         else:
-            print('Algorithm was NOT provided. Note the type must be a list.')
-            return None
+            print('\nERROR: Algorithm was NOT provided. Note the type must be a list.\n')
+            model = None
         return model

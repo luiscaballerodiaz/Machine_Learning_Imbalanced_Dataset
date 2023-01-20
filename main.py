@@ -46,7 +46,7 @@ params = [
     {'classifier': [], 'preprocessing': [], 'classifier__max_depth': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}]
 grid = utils.cross_grid_validation(algorithm, scale, params, X_train_scaled, y_train, X_test_scaled, y_test, scoring, 5)
 pd_grid = pd.DataFrame(grid.cv_results_)
-utils.param_sweep_plot(algorithm=algorithm, params=pd_grid['params'], test_score=pd_grid['mean_test_score'])
+utils.param_sweep_plot(algorithm, params=pd_grid['params'], test_score=pd_grid['mean_test_score'])
 params = [{'C': 0.01}, {'C': 0.0001}, {}, {'max_depth': 3}]
 utils.roc_curve_plot(algorithm, params, X_train_scaled, y_train, X_test_scaled, y_test, weight_tpr, 'Optimal')
 
