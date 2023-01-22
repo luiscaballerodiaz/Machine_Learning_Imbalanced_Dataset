@@ -23,7 +23,7 @@ import numpy as np
 
 
 class DataTools:
-    """Class to plot data using visualization tools"""
+    """Class to plot and apply tools to dataset"""
     def __init__(self):
         self.fig_width = 20
         self.fig_height = 10
